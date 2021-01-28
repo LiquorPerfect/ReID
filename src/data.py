@@ -10,3 +10,4 @@ for dir in os.listdir(query_path):
         rm_jpg=os.path.join(train_path,dir+'/'+jpg)
         os.remove(rm_jpg)
         print("hello the world!")
+        print("111111111111")
