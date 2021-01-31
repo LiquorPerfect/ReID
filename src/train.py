@@ -18,7 +18,7 @@ import torch
 import torch.backends.cudnn as cudnn
 import torchvision
 
-import resnet_pcb
+import reidnet_pcb
 
 
 #define the required hyperparameters
@@ -115,7 +115,7 @@ def judge_model_dir(model_dir):
 def create_model(pcb: bool, datasets):
     #create model
     if pcb:
-        model = resnet_pcb.PCB(num_classes=len(datasets['train'].classes))
+        model = reidnet_pcb.PCB(num_classes=len(datasets['train'].classes))
     else:
         model = 's'
     return model
@@ -128,7 +128,7 @@ def train():
     judge_model_dir(opt.model_dir)
     model = create_model(opt.pcb, datasets)
     if opt.pcb:
-        resnet_pcb.training_reidnet_pcb(device=device,
+        reidnet_pcb.training_reidnet_pcb(device=device,
                                         datasets=datasets,
                                         model=model,
                                         criterion=torch.nn.CrossEntropyLoss(),
