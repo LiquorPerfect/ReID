@@ -324,10 +324,10 @@ def training_reidnet_pcb(device,
                     save_path = os.path.join(
                         path, 'reidnet_pcb_{}.pth'.format(epoch))
                     torch.save(model.state_dict(), save_path)
-        
+
         time_elapsed = time.time() - since
         print("Time compelet in {:.0f}m {:.0f}".format(time_elapsed // 60,
-                                                   time_elapsed % 60))
+                                                       time_elapsed % 60))
     time_elapsed = time.time() - since
     print("Time compelet in {:.0f}m {:.0f}".format(time_elapsed // 60,
                                                    time_elapsed % 60))

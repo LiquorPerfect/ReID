@@ -19,6 +19,7 @@ import torch.backends.cudnn as cudnn
 import torchvision
 
 import reidnet_pcb
+import reidnet_resnet
 
 
 #define the required hyperparameters
@@ -29,27 +30,29 @@ def args():
                         action='store_true',
                         help='Disable CUDA')
     parser.add_argument("--model_dir",
-                        default='F:/ReID/reid_myself/model',
+                        default="F:/ReID/reid_myself/model",
                         type=str,
                         help="The output model save dir")
-    parser.add_argument('--data_dir',
-                        default='F:/ReID/reid_myself/data/Market-1501-v15.09.15',
-                        type=str,
-                        help='trian and val datasets dir')
-    parser.add_argument('--batch_size',
+    parser.add_argument(
+        "--data_dir",
+        default="F:/ReID/reid_myself/data/Market-1501-v15.09.15",
+        type=str,
+        help="The trian and val datasets dir")
+    parser.add_argument("--batch_size",
                         default=24,
                         type=int,
                         help='batch_size')
-    parser.add_argument('--lr', default=0.04, type=float, help='learning rate')
-    parser.add_argument('--pcb',
+    parser.add_argument("--lr", default=0.04, type=float, help='learning rate')
+    parser.add_argument("--pcb",
                         default=True,
-                        action='store_true',
-                        help='you can select pcb or resnet')
+                        action="store_true",
+                        help="you can select pcb or resnet")
     return parser.parse_args()
 
 
 #specify gpu or cpu for training
-def used_device(disable_cuda: bool = False):  #disable_cuda:bool=False
+#disable_cuda:bool = False
+def used_device(disable_cuda: bool = False):
     if torch.cuda.is_available() and not disable_cuda:
         device = torch.device("cuda:0")
         #use cudnn accelerate the net
@@ -111,9 +114,8 @@ def judge_model_dir(model_dir):
             shutil.copy(os.path.join(src_path, file),
                         os.path.join(model_dir, file))
 
-
+#create model
 def create_model(pcb: bool, datasets):
-    #create model
     if pcb:
         model = reidnet_pcb.PCB(num_classes=len(datasets['train'].classes))
     else:
@@ -129,14 +131,14 @@ def train():
     model = create_model(opt.pcb, datasets)
     if opt.pcb:
         reidnet_pcb.training_reidnet_pcb(device=device,
-                                        datasets=datasets,
-                                        model=model,
-                                        criterion=torch.nn.CrossEntropyLoss(),
-                                        lr=opt.lr,
-                                        batch_size=opt.batch_size,
-                                        path=opt.model_dir)
+                                         datasets=datasets,
+                                         model=model,
+                                         criterion=torch.nn.CrossEntropyLoss(),
+                                         lr=opt.lr,
+                                         batch_size=opt.batch_size,
+                                         path=opt.model_dir)
     else:
-        pass
+        reidnet_resnet
 
 
 if __name__ == "__main__":
