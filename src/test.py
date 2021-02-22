@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 '''
----------------------------------------------- 
+-----------------------------------------------
 * @File    :   test.py
 * @Time    :   2021/02/02 22:18:37
 * @Author  :   zhang_jinlong
@@ -9,10 +9,15 @@
 * @Address ：  https://github.com/LiquorPerfect
 -----------------------------------------------
 '''
+
 import argparse
-import torch
 import os
+
+import torch
 import torchvision
+
+import reidnet_pcb
+import reidnet_resnet
 
 
 def parser_args():
@@ -58,7 +63,8 @@ def load_model(model_dir, epoch, device):
     return model
 
 
-def loag_test_images(model, dataset_path, batch_size):
+def propocess_test_images(model, dataset_path, batch_size):
+    #这边需要打印一下 model中有什么东西
     data_transforms = getattr(model, "transforms")
     image_datasets = {
         x: torchvision.datasets.ImageFolder(os.path.join(dataset_path, x),
@@ -73,3 +79,42 @@ def loag_test_images(model, dataset_path, batch_size):
         for x in ["gallery", "quary", "val"]
     }
     return dataloaders
+
+
+def predict_and_extract_features(data_loader, device):
+    features = torch.FloatTensor()  #这边这个 表示什么意思
+    classes = torch.LongTensor()  #如果没有给出参数，则返回空的零维张量
+    #这边相当于初始化
+
+    for data in data_loader:
+        image, lable = data
+        n, c, h, w = image.size()
+
+        image = image.to(device)
+        #第一个参数是索引的对象，第二个参数0表示按行索引，
+        #1表示按列进行索引，第三个参数是一个tensor，就是索引的序
+        #表示倒序，将图片反转了
+        imgflr = torch.index_select(image, 3, torch.arange(w - 1, 0,
+                                                           -1)).to(device)
+
+        with torch.no_grad():
+            y1, f1 = model(image)
+            y2, f2 = model(imgflr)
+
+            feat = f1 + f2
+            sm = torch.nn.Softmax(dim=1)
+            if isinstance(model, reidnet_pcb.ReIDNetPCB):
+                norm = torch.norm(feat, p=2, dim=1, keepidm=True) * np.sqrt(6)
+                feat = feat.div(norm)
+                feat = feat.view(feat.size(0), -1)
+            elif isinstance(model, reidnet_resnet.ReIDNetResNet):
+                norm = torch.norm(feat, p=2, dim=1, keepdim=True)
+                feat = feat.div(norm)
+            else:
+                assert False
+
+            featrues = torch.cat((featrues, feat.cpu()), 0)
+            _, preds = torch.max(out, 1, keepdim=True)
+            classes = torch.cat((classes, preds.cpu()), 0)
+
+    return features, classes
