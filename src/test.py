@@ -95,7 +95,7 @@ def predict_and_extract_features(data_loader, model, device):
         #1表示按列进行索引，第三个参数是一个tensor，就是索引的序
         #表示倒序，将图片反转了
         imgflr = torch.index_select(image, 3, torch.arange(w - 1, 0,
-                                                           -1)).to(device)
+                                                           -1).to(device))
 
         with torch.no_grad():
             y1, f1 = model(image)
@@ -109,7 +109,7 @@ def predict_and_extract_features(data_loader, model, device):
                     out = out + sm(y1[i])
 
                 for i in range(0, len(y2)):
-                    out = out + y2[i]
+                    out = out + sm(y2[i])
 
             elif isinstance(model, reidnet_resnet.ReIDNetResNet):
                 out = sm(y1) + sm(y2)
@@ -120,7 +120,7 @@ def predict_and_extract_features(data_loader, model, device):
             # 1. To treat every part equally, I calculate the norm for every 2048-dim part feature.
             # 2. To keep the cosine score==1, sqrt(6) is added to norm the whole feature (2048*6).
             if isinstance(model, reidnet_pcb.ReIDNetPCB):
-                norm = torch.norm(feat, p=2, dim=1, keepidm=True) * np.sqrt(6)
+                norm = torch.norm(feat, p=2, dim=1, keepdim=True) * np.sqrt(6)
                 feat = feat.div(norm)
                 feat = feat.view(feat.size(0), -1)
             elif isinstance(model, reidnet_resnet.ReIDNetResNet):
@@ -129,7 +129,7 @@ def predict_and_extract_features(data_loader, model, device):
             else:
                 assert False
 
-            featrues = torch.cat((featrues, feat.cpu()), 0)
+            features = torch.cat((features, feat.cpu()), 0)
             _, preds = torch.max(out, 1, keepdim=True)
             classes = torch.cat((classes, preds.cpu()), 0)
 
@@ -144,8 +144,8 @@ def get_label_and_cam(path):
         p, file_name = os.path.split(p)
         _, label = os.path.split(p)
         labels.append(label)
-        cam.append(lable + file_name)
-    return lables, cam
+        cam.append(label + file_name)
+    return labels, cam
 
 
 def dump_test_result(opt, image_datasets, data_loader, model, device):
@@ -209,6 +209,5 @@ def dump_test_result(opt, image_datasets, data_loader, model, device):
         'query_path': image_datasets['query'].imgs
     }
 
-    #
     with open(os.path.join(opt.model_dir, 'test_result.p'), 'wb') as f:
         pickle.dump(result, f, pickle.HIGHEST_PROTOCOL)
