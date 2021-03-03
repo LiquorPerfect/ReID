@@ -20,12 +20,15 @@ import torch
 
 def evaluate(qf, ql, qc, gf, fl, gc):
     query = qf
+    # 求矩阵的模
     score = np.dot(gf, query)
+    # argsort()是将X中的元素从小到大排序后，提取对应的索引index
     index = np.argsort(score)
-
+    # np.argwhere 返回非0的数组元组的索引，其中a是要索引数组的条件
     query_index = np.argwhere(gl == ql)
     camera_index = np.argwhere(gc == qc)
 
+    # 把在a中的但是不在b中的元素按a中的顺序排序，并且不合并重复的元素
     good_index = np.setdiff1d(query_index, camera_index, assume_unique=True)
     junk_index1 = np.argwhere(gl == "-1")
     junk_index2 = np.intersect1d(query_index, camera_index)
@@ -36,7 +39,32 @@ def evaluate(qf, ql, qc, gf, fl, gc):
 
 
 def compute_mAP(index, good_index, junk_index):
-    pass
+    ap = 0
+    cmc = torch.IntTensor(len(index)).zero_()
+    # if empty
+    if good_index.size == 0:
+        cmc[0] = -1
+        return ap, cmc
+    # remove junk_index
+    mask = np.in1d(index, junk_index, invert=True)
+    index = index[mask]
+
+    # find good_index index
+    ngood = len(good_index)
+    mask = np.in1d(index, good_index)
+    rows_good = np.argwhere(mask == True)
+    rows_good = rows_good.flatten()
+
+    cmc[rows_good[0]:] = 1
+    for i in range(ngood):
+        d_recall = 1.0 / ngood
+        precision = (i + 1) * 1.0 / (rows_good[i] + 1)
+        if rows_good[i] != 0:
+            old_precision = i * 1.0 / rows_good[i]
+        else:
+            old_precision = 1.0
+        ap = ap + d_recall * (old_precision + precision) / 2
+    return ap, cmc
 
 
 def parser_args():
@@ -55,7 +83,7 @@ def main():
         result = pickle.load(f)
 
     query_feature = result["query_f"]
-    query_cam = np.array(result["query_cam"])  #label + image_name
+    query_cam = np.array(result["query_cam"])  #camera
     query_label = np.array(result["query_label"])
     gallery_feature = result["gallery_f"]
     gallery_cam = np.array(result["gallery_cam"])
