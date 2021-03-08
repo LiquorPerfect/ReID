@@ -94,8 +94,8 @@ def predict_and_extract_features(data_loader, model, device):
         #第一个参数是索引的对象，第二个参数0表示按行索引，
         #1表示按列进行索引，第三个参数是一个tensor，就是索引的序
         #表示倒序，将图片反转了
-        imgflr = torch.index_select(image, 3, torch.arange(w - 1, 0,
-                                                           -1).to(device))
+        imgflr = torch.index_select(image, 3,
+                                    torch.arange(w - 1, 0, -1).to(device))
 
         with torch.no_grad():
             y1, f1 = model(image)
@@ -211,3 +211,19 @@ def dump_test_result(opt, image_datasets, data_loader, model, device):
 
     with open(os.path.join(opt.model_dir, 'test_result.p'), 'wb') as f:
         pickle.dump(result, f, pickle.HIGHEST_PROTOCOL)
+
+
+def main():
+    args = parser_args()
+    device = used_device(args.disable_cuda)
+    model = load_model(args.model_dir, args.epoch, device)
+    image_datasets, dataloaders = propocess_test_images(
+        model, args.dataset_dir, args.batch_size)
+    features, classes = predict_and_extract_features(dataloaders, model,
+                                                     device)
+    labels, cam = get_label_and_cam()
+    dump_test_result(args, image_datasets, data_loader, model, device)
+
+
+if __name__ == "__main__":
+    main()

@@ -79,7 +79,8 @@ def parser_args():
 
 def main():
     args = parser_args()
-    with open(args.result_file, 'rb') as f:
+    result_file=args.result_file
+    with open(result_file, 'rb') as f:
         result = pickle.load(f)
 
     query_feature = result["query_f"]
