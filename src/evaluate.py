@@ -18,7 +18,7 @@ import numpy as np
 import torch
 
 
-def evaluate(qf, ql, qc, gf, fl, gc):
+def evaluate(qf, ql, qc, gf, gl, gc):
     query = qf
     # 求矩阵的模
     score = np.dot(gf, query)

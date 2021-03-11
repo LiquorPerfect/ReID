@@ -11,8 +11,12 @@
 '''
 
 import argparse
+import json
 import os
+import pickle
 
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torchvision
 
@@ -87,7 +91,7 @@ def predict_and_extract_features(data_loader, model, device):
     #这边相当于初始化
 
     for data in data_loader:
-        image, lable = data
+        image, label = data
         n, c, h, w = image.size()
 
         image = image.to(device)
@@ -151,14 +155,13 @@ def get_label_and_cam(path):
 def dump_test_result(opt, image_datasets, data_loader, model, device):
     gallery_label, gallery_cam = get_label_and_cam(
         image_datasets['gallery'].imgs)
-    query_label, quary_cam = get_label_and_cam(image_datasets['query'].imgs)
+    query_label, query_cam = get_label_and_cam(image_datasets['query'].imgs)
 
     gallery_feature, _ = predict_and_extract_features(data_loader['gallery'],
                                                       model, device)
     query_feature, _ = predict_and_extract_features(data_loader['query'],
                                                     model, device)
-    # _, prediction = predict_and_extract_features(data_loader['val'], model,
-    #  device)
+    _, prediction = predict_and_extract_features(data_loader['val'], model, device)
     if opt.analysis:
         data = []
         fig = plt.figure()
@@ -219,10 +222,7 @@ def main():
     model = load_model(args.model_dir, args.epoch, device)
     image_datasets, dataloaders = propocess_test_images(
         model, args.dataset_dir, args.batch_size)
-    features, classes = predict_and_extract_features(dataloaders, model,
-                                                     device)
-    labels, cam = get_label_and_cam()
-    dump_test_result(args, image_datasets, data_loader, model, device)
+    dump_test_result(args, image_datasets, dataloaders, model, device)
 
 
 if __name__ == "__main__":

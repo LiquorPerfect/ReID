@@ -32,7 +32,7 @@ model_urls = {
 
 class ReIDNetResNet(torchvision.models.ResNet):
     def __init__(self, block, layers, num_calsses=751, bottleneck=256):
-        super.__init__(block, layers)
+        super().__init__(block, layers)
         self.num_calsses = num_calsses
         self.avgpool = nn.AdaptiveAvgPool1d((1, 1))
 
@@ -129,7 +129,7 @@ def train_reidnet_resnet(device,
     scheduler = lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.1)
 
     if not os.path.isdir(path):
-        os.makdirs(path)
+        os.makedirs(path)
 
     model = model.to(device)
 
@@ -137,10 +137,16 @@ def train_reidnet_resnet(device,
     y_err = {"train": [], "val": []}
     x_epoch = []
 
-    dataloaders = {x: len(datasets[x]) for x in ["train", "val"]}
+    dataloaders = {
+        x: torch.utils.data.DataLoader(datasets[x], batch_size=batch_size,
+                                       shuffle=True, num_workers=8)
+        for x in ['train', 'val']
+    }
 
-    for epoch in ragne(num_epochs):
-        pront("Epoch {}/{}".format(epoch, num_epochs - 1))
+    dataset_sizes = {x: len(datasets[x]) for x in ["train", "val"]}
+
+    for epoch in range(num_epochs):
+        print("Epoch {}/{}".format(epoch, num_epochs - 1))
         print("-" * 10)
 
         x_epoch.append(epoch)
@@ -163,7 +169,7 @@ def train_reidnet_resnet(device,
                 inputs, labels = data
                 now_batch_size, c, h, w = inputs.shape
 
-                if now_bathc_size < batch_size:
+                if now_batch_size < batch_size:
                     continue
 
                 inputs = inputs.to(device)

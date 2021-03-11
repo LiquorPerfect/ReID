@@ -33,7 +33,7 @@ model_urls = {
 
 class ReIDNetPCB(torchvision.models.ResNet):
     def __init__(self, block, layers, num_classes=751, bottleneck=256):
-        super(ReIDNetPCB, self).__init__(block, layers)
+        super().__init__(block, layers)
         self.num_part = 6
         self.num_calsses = num_classes
 

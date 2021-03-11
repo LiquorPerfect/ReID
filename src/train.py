@@ -144,7 +144,7 @@ def train():
             device=device,
             datasets=datasets,
             model=model,
-            criterion=torhc.nn.CrossEntropyLoss(),
+            criterion=torch.nn.CrossEntropyLoss(),
             lr=opt.lr,
             batch_size=opt.batch_size,
             path=opt.model_dir)
