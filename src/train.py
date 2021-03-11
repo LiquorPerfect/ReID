@@ -120,7 +120,8 @@ def create_model(pcb: bool, datasets):
     if pcb:
         model = reidnet_pcb.PCB(num_classes=len(datasets['train'].classes))
     else:
-        model = 's'
+        model = reidnet_resnet.reidnet_resnet_50(
+            num_classes=len(datasets['train'].classes))
     return model
 
 
@@ -139,7 +140,14 @@ def train():
                                          batch_size=opt.batch_size,
                                          path=opt.model_dir)
     else:
-        reidnet_resnet
+        reidnet_resnet.train_reidnet_resnet(
+            device=device,
+            datasets=datasets,
+            model=model,
+            criterion=torhc.nn.CrossEntropyLoss(),
+            lr=opt.lr,
+            batch_size=opt.batch_size,
+            path=opt.model_dir)
 
 
 if __name__ == "__main__":
