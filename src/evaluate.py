@@ -24,7 +24,9 @@ def evaluate(qf, ql, qc, gf, gl, gc):
     score = np.dot(gf, query)
     # argsort()是将X中的元素从小到大排序后，提取对应的索引index
     index = np.argsort(score)
+    index = index[::-1]
     # np.argwhere 返回非0的数组元组的索引，其中a是要索引数组的条件
+
     query_index = np.argwhere(gl == ql)
     camera_index = np.argwhere(gc == qc)
 
@@ -71,7 +73,7 @@ def parser_args():
     parser = argparse.ArgumentParser(
         description="The model performance evaluation script")
     parser.add_argument("--result_file",
-                        default="./test_result.p",
+                        default="E:/ReID/reid_example/model4/test_result.p",
                         type=str,
                         help="the test save result file")
     return parser.parse_args()
@@ -79,7 +81,7 @@ def parser_args():
 
 def main():
     args = parser_args()
-    result_file=args.result_file
+    result_file = args.result_file
     with open(result_file, 'rb') as f:
         result = pickle.load(f)
 
@@ -90,18 +92,18 @@ def main():
     gallery_cam = np.array(result["gallery_cam"])
     gallery_label = np.array(result["gallery_label"])
 
-    CMC = torch.IntTensor(len(gallery_label)).zero()
+    CMC = torch.IntTensor(len(gallery_label)).zero_()
     ap = 0.0
 
     for i in range(len(query_label)):
         ap_tmp, CMC_tmp = evaluate(query_feature[i], query_label[i],
                                    query_cam[i], gallery_feature,
                                    gallery_label, gallery_cam)
-        if CMC_tmp == -1:
+        if CMC_tmp[0] == -1:
             continue
         CMC = CMC + CMC_tmp
         ap += ap_tmp
-        print(i, CMC_tmp[i], ap_tmp)
+        print(i, CMC_tmp[0], ap_tmp)
 
     CMC = CMC.float()
     CMC = CMC / len(query_label)
@@ -109,5 +111,5 @@ def main():
           (CMC[0], CMC[4], CMC[9], ap / len(query_label)))
 
 
-if __name__ == "main":
+if __name__ == "__main__":
     main()

@@ -30,21 +30,20 @@ def args():
                         action='store_true',
                         help='Disable CUDA')
     parser.add_argument("--model_dir",
-                        default="F:/ReID/reid_myself/model",
+                        default="E:\myGitHub\ReID\model_1",
                         type=str,
                         help="The output model save dir")
-    parser.add_argument(
-        "--data_dir",
-        default="F:/ReID/reid_myself/data/Market-1501-v15.09.15",
-        type=str,
-        help="The trian and val datasets dir")
+    parser.add_argument("--data_dir",
+                        default="E:/ReID/reid_example/data/pytorch",
+                        type=str,
+                        help="The trian and val datasets dir")
     parser.add_argument("--batch_size",
                         default=24,
                         type=int,
                         help='batch_size')
     parser.add_argument("--lr", default=0.04, type=float, help='learning rate')
     parser.add_argument("--pcb",
-                        default=True,
+                        default=False,#默认pcb False为resnet50s
                         action="store_true",
                         help="you can select pcb or resnet")
     return parser.parse_args()

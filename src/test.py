@@ -22,6 +22,38 @@ import torchvision
 
 import reidnet_pcb
 import reidnet_resnet
+from train import dataset_preprocess
+
+transforms = {
+    "train":
+    torchvision.transforms.Compose([
+        torchvision.transforms.Resize(size=(384, 192), interpolation=3),
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+    ]),
+    "val":
+    torchvision.transforms.Compose([
+        torchvision.transforms.Resize(size=(384, 192), interpolation=3),
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+    ]),
+    "gallery":
+    torchvision.transforms.Compose([
+        torchvision.transforms.Resize(size=(384, 192), interpolation=3),
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+    ]),
+    "query":
+    torchvision.transforms.Compose([
+        torchvision.transforms.Resize(size=(384, 192), interpolation=3),
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+    ])
+}
 
 
 def parser_args():
@@ -31,11 +63,11 @@ def parser_args():
                         action="store_true",
                         help="Disable cuda")
     parser.add_argument("--dataset_dir",
-                        default="./",
+                        default="E:/ReID/reid_example/data/pytorch",
                         type=str,
                         help="The test images dir path")
     parser.add_argument("--model_dir",
-                        default="./",
+                        default="E:\myGitHub\ReID\model_0",
                         type=str,
                         help="the save model path")
     parser.add_argument("--epoch",
@@ -56,31 +88,31 @@ def parser_args():
 
 def used_device(disable_cuda: bool = False):
     device = torch.device(
-        "cude:0" if torch.cuda.is_available and not disable_cuda else "cpu")
+        "cuda:0" if torch.cuda.is_available and not disable_cuda else "cpu")
     return device
 
 
 def load_model(model_dir, epoch, device):
-    model = torch.load(os.path.join(model_dir, "model_{}.pth".format(epoch)))
-    model.to(device)
+    model = torch.load(os.path.join(model_dir,
+                                    "model_{}.pth".format(epoch))).to(device)
     model.eval()
     return model
 
 
 def propocess_test_images(model, dataset_path, batch_size):
     #这边需要打印一下 model中有什么东西
-    data_transforms = getattr(model, "transforms")
+    data_transforms = transforms
     image_datasets = {
         x: torchvision.datasets.ImageFolder(os.path.join(dataset_path, x),
                                             transform=data_transforms[x])
         for x in ["gallery", "query", "val"]
     }
     dataloaders = {
-        x: torch.utils.data.DataLoader(image_datasets,
+        x: torch.utils.data.DataLoader(image_datasets[x],
                                        batch_size=batch_size,
                                        shuffle=False,
                                        num_workers=16)
-        for x in ["gallery", "quary", "val"]
+        for x in ["gallery", "query", "val"]
     }
     return image_datasets, dataloaders
 
@@ -161,7 +193,8 @@ def dump_test_result(opt, image_datasets, data_loader, model, device):
                                                       model, device)
     query_feature, _ = predict_and_extract_features(data_loader['query'],
                                                     model, device)
-    _, prediction = predict_and_extract_features(data_loader['val'], model, device)
+    _, prediction = predict_and_extract_features(data_loader['val'], model,
+                                                 device)
     if opt.analysis:
         data = []
         fig = plt.figure()

@@ -31,16 +31,16 @@ model_urls = {
 
 
 class ReIDNetResNet(torchvision.models.ResNet):
-    def __init__(self, block, layers, num_calsses=751, bottleneck=256):
+    def __init__(self, block, layers, num_classes=751, bottleneck=256):
         super().__init__(block, layers)
-        self.num_calsses = num_calsses
-        self.avgpool = nn.AdaptiveAvgPool1d((1, 1))
+        self.num_classes = num_classes
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
         self.tail = nn.Sequential(
             OrderedDict([("bottleneck", nn.Linear(self.inplanes, bottleneck)),
-                         ("bn", nn.BatchNorm1d(self.inplanes, bottleneck)),
+                         ("bn", nn.BatchNorm1d(bottleneck)),
                          ("dropout", nn.Dropout(p=0.5))]))
-        self.tfc = nn.Linear(bottleneck, self.num_calsses)
+        self.tfc = nn.Linear(bottleneck, self.num_classes)
 
         for m in self.tail.modules():
             if isinstance(m, nn.Linear):
@@ -82,9 +82,9 @@ class ReIDNetResNet(torchvision.models.ResNet):
         return 2048
 
 
-def reidnet_resnet_50(model_path=None, num_calsses=751, **kwargs):
-    m = ReIDNetResNet(torchvision.models.resnet.BasicBlock, [3, 4, 6, 3],
-                      num_calsses, **kwargs)
+def reidnet_resnet_50(model_path=None, num_classes=751):
+    m = ReIDNetResNet(torchvision.models.resnet.Bottleneck, [3, 4, 6, 3],
+                      num_classes)
     if model_path is None:
         m.load_state_dict(model_zoo.load_url(model_urls['resnet50']),
                           strict=False)
@@ -138,8 +138,10 @@ def train_reidnet_resnet(device,
     x_epoch = []
 
     dataloaders = {
-        x: torch.utils.data.DataLoader(datasets[x], batch_size=batch_size,
-                                       shuffle=True, num_workers=8)
+        x: torch.utils.data.DataLoader(datasets[x],
+                                       batch_size=batch_size,
+                                       shuffle=True,
+                                       num_workers=8)
         for x in ['train', 'val']
     }
 
