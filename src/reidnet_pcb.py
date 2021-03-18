@@ -35,10 +35,10 @@ class ReIDNetPCB(torchvision.models.ResNet):
     def __init__(self, block, layers, num_classes=751, bottleneck=256):
         super().__init__(block, layers)
         self.num_part = 6
-        self.num_calsses = num_classes
+        self.num_classes = num_classes
 
-        # self.avgpool=nn.AvgPool2d((4,12))
-        self.avgpool = nn.AdaptiveAvgPool2d((self.num_part, 1))
+        self.avgpool = nn.AvgPool2d((4, 12))
+        # self.avgpool = nn.AdaptiveAvgPool2d((self.num_part, 1))
         self.dropout = nn.Dropout(p=0.5)
 
         self.layer4[0].downsample[0].stride = (1, 1)
@@ -51,17 +51,17 @@ class ReIDNetPCB(torchvision.models.ResNet):
         self.tail5 = self._make_tail(self.inplanes, bottleneck)
         self.tail6 = self._make_tail(self.inplanes, bottleneck)
 
-        self.tfc1 = self._make_fc(bottleneck, self.num_calsses)
-        self.tfc2 = self._make_fc(bottleneck, self.num_calsses)
-        self.tfc3 = self._make_fc(bottleneck, self.num_calsses)
-        self.tfc4 = self._make_fc(bottleneck, self.num_calsses)
-        self.tfc5 = self._make_fc(bottleneck, self.num_calsses)
-        self.tfc6 = self._make_fc(bottleneck, self.num_calsses)
+        self.tfc1 = self._make_fc(bottleneck, self.num_classes)
+        self.tfc2 = self._make_fc(bottleneck, self.num_classes)
+        self.tfc3 = self._make_fc(bottleneck, self.num_classes)
+        self.tfc4 = self._make_fc(bottleneck, self.num_classes)
+        self.tfc5 = self._make_fc(bottleneck, self.num_classes)
+        self.tfc6 = self._make_fc(bottleneck, self.num_classes)
 
-    def _make_tail(self, inplaces, places):
+    def _make_tail(self, inplanes, planes):
         ret = nn.Sequential(
-            OrderedDict([('fc1', nn.Linear(inplaces, places)),
-                         ('bn', nn.BatchNorm1d(places)),
+            OrderedDict([('fc1', nn.Linear(inplanes, planes)),
+                         ('bn', nn.BatchNorm1d(planes)),
                          ('dropout', nn.Dropout(p=0.5))]))
         for mod in ret.modules():
             if isinstance(mod, nn.Linear):
@@ -72,12 +72,12 @@ class ReIDNetPCB(torchvision.models.ResNet):
                 nn.init.constant_(mod.bias.data, 0.0)
         return ret
 
-    def _make_fc(self, inplaces, places):
-        ret = nn.Sequential(OrderedDict([('fc2', nn.Linear(inplaces,
-                                                           places))]))
+    def _make_fc(self, inplanes, planes):
+        ret = nn.Sequential(OrderedDict([('fc2', nn.Linear(inplanes,
+                                                           planes))]))
         for mod in ret.modules():
             if isinstance(mod, nn.Linear):
-                nn.init.normal_(mod.weight.data, std=0.01)
+                nn.init.normal_(mod.weight.data, std=0.001)
                 nn.init.constant_(mod.bias.data, 0.0)
             elif isinstance(mod, nn.BatchNorm1d):
                 mod.weight.data.fill(1)
@@ -278,16 +278,16 @@ def training_reidnet_pcb(device,
                 #forward
                 if phase == 'val':
                     with torch.no_grad():
-                        outputs, feature = model(inputs)
+                        outputs, features = model(inputs)
                 else:
-                    outputs, featrue = model(inputs)
+                    outputs, features = model(inputs)
                 sm = nn.Softmax(dim=1)
 
-                sorce = sm(outputs[0].detach())
+                score = sm(outputs[0].detach())
                 for i in range(1, len(outputs)):
-                    sorce = sorce + sm(outputs[i].detach())
+                    score = score + sm(outputs[i].detach())
 
-                _, preds = torch.max(sorce, 1)
+                _, preds = torch.max(score, 1)
                 loss = criterion(outputs[0], labels)
                 for i in range(1, len(outputs)):
                     loss = loss + criterion(outputs[i], labels)
@@ -298,7 +298,7 @@ def training_reidnet_pcb(device,
                     optimizer.step()
 
                 running_loss += loss.item() * now_batch_size
-                running_corrects += float(torch.sum(preds == labels))
+                running_corrects += float(torch.sum(preds == labels.data))
 
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = running_corrects / dataset_sizes[phase]
@@ -320,16 +320,16 @@ def training_reidnet_pcb(device,
 
                 fig.savefig(os.path.join(path, 'train.jpg'))
 
-                if epoch % 10 == 0:
+                if epoch % 10 == 9:
                     save_path = os.path.join(
                         path, 'reidnet_pcb_{}.pth'.format(epoch))
                     torch.save(model.state_dict(), save_path)
 
         time_elapsed = time.time() - since
-        print("Time compelet in {:.0f}m {:.0f}".format(time_elapsed // 60,
+        print("Time complete in {:.0f}m {:.0f}".format(time_elapsed // 60,
                                                        time_elapsed % 60))
     time_elapsed = time.time() - since
-    print("Time compelet in {:.0f}m {:.0f}".format(time_elapsed // 60,
+    print("Time complete in {:.0f}m {:.0f}".format(time_elapsed // 60,
                                                    time_elapsed % 60))
 
     #load the last model net and weights

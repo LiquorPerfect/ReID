@@ -11,7 +11,6 @@
 '''
 
 import argparse
-import os
 import pickle
 
 import numpy as np
@@ -20,17 +19,12 @@ import torch
 
 def evaluate(qf, ql, qc, gf, gl, gc):
     query = qf
-    # 求矩阵的模
     score = np.dot(gf, query)
-    # argsort()是将X中的元素从小到大排序后，提取对应的索引index
     index = np.argsort(score)
     index = index[::-1]
-    # np.argwhere 返回非0的数组元组的索引，其中a是要索引数组的条件
 
     query_index = np.argwhere(gl == ql)
     camera_index = np.argwhere(gc == qc)
-
-    # 把在a中的但是不在b中的元素按a中的顺序排序，并且不合并重复的元素
     good_index = np.setdiff1d(query_index, camera_index, assume_unique=True)
     junk_index1 = np.argwhere(gl == "-1")
     junk_index2 = np.intersect1d(query_index, camera_index)
@@ -73,7 +67,7 @@ def parser_args():
     parser = argparse.ArgumentParser(
         description="The model performance evaluation script")
     parser.add_argument("--result_file",
-                        default="E:/ReID/reid_example/model4/test_result.p",
+                        default="E:/myGitHub/ReID/model_pcb_1/test_result.p",
                         type=str,
                         help="the test save result file")
     return parser.parse_args()

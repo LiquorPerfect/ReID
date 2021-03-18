@@ -23,14 +23,14 @@ import reidnet_resnet
 
 
 #define the required hyperparameters
-def args():
+def parse_args():
     parser = argparse.ArgumentParser(
         description="The ReID Model Training Example")
     parser.add_argument('--disable_cuda',
                         action='store_true',
                         help='Disable CUDA')
     parser.add_argument("--model_dir",
-                        default="E:\myGitHub\ReID\model_1",
+                        default="E:\myGitHub\ReID\model_pcb_1",
                         type=str,
                         help="The output model save dir")
     parser.add_argument("--data_dir",
@@ -42,10 +42,11 @@ def args():
                         type=int,
                         help='batch_size')
     parser.add_argument("--lr", default=0.04, type=float, help='learning rate')
-    parser.add_argument("--pcb",
-                        default=False,#默认pcb False为resnet50s
-                        action="store_true",
-                        help="you can select pcb or resnet")
+    parser.add_argument(
+        "--pcb",
+        default=True,  #默认pcb False为resnet50s
+        action="store_true",
+        help="you can select pcb or resnet")
     return parser.parse_args()
 
 
@@ -61,38 +62,40 @@ def used_device(disable_cuda: bool = False):
     return device
 
 
+transforms = {
+    "train":
+    torchvision.transforms.Compose([
+        torchvision.transforms.Resize(size=(384, 192), interpolation=3),
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+    ]),
+    "val":
+    torchvision.transforms.Compose([
+        torchvision.transforms.Resize(size=(384, 192), interpolation=3),
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+    ]),
+    "gallery":
+    torchvision.transforms.Compose([
+        torchvision.transforms.Resize(size=(384, 192), interpolation=3),
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+    ]),
+    "query":
+    torchvision.transforms.Compose([
+        torchvision.transforms.Resize(size=(384, 192), interpolation=3),
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+    ])
+}
+
+
 # preprocess the datasets
 def dataset_preprocess(dataset_path):
-    transforms = {
-        "train":
-        torchvision.transforms.Compose([
-            torchvision.transforms.Resize(size=(384, 192), interpolation=3),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                             std=[0.229, 0.224, 0.225])
-        ]),
-        "val":
-        torchvision.transforms.Compose([
-            torchvision.transforms.Resize(size=(384, 192), interpolation=3),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                             std=[0.229, 0.224, 0.225])
-        ]),
-        "gallery":
-        torchvision.transforms.Compose([
-            torchvision.transforms.Resize(size=(384, 192), interpolation=3),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                             std=[0.229, 0.224, 0.225])
-        ]),
-        "query":
-        torchvision.transforms.Compose([
-            torchvision.transforms.Resize(size=(384, 192), interpolation=3),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                             std=[0.229, 0.224, 0.225])
-        ])
-    }
     datasets = {
         x: torchvision.datasets.ImageFolder(os.path.join(dataset_path, x),
                                             transform=transforms[x])
@@ -114,7 +117,7 @@ def judge_model_dir(model_dir):
                         os.path.join(model_dir, file))
 
 
-#create model
+#create model instance
 def create_model(pcb: bool, datasets):
     if pcb:
         model = reidnet_pcb.PCB(num_classes=len(datasets['train'].classes))
@@ -125,28 +128,28 @@ def create_model(pcb: bool, datasets):
 
 
 def train():
-    opt = args()
-    device = used_device(opt.disable_cuda)
-    datasets = dataset_preprocess(opt.data_dir)
-    judge_model_dir(opt.model_dir)
-    model = create_model(opt.pcb, datasets)
-    if opt.pcb:
+    args = parse_args()
+    device = used_device(args.disable_cuda)
+    datasets = dataset_preprocess(args.data_dir)
+    judge_model_dir(args.model_dir)
+    model = create_model(args.pcb, datasets)
+    if args.pcb:
         reidnet_pcb.training_reidnet_pcb(device=device,
                                          datasets=datasets,
                                          model=model,
                                          criterion=torch.nn.CrossEntropyLoss(),
-                                         lr=opt.lr,
-                                         batch_size=opt.batch_size,
-                                         path=opt.model_dir)
+                                         lr=args.lr,
+                                         batch_size=args.batch_size,
+                                         path=args.model_dir)
     else:
         reidnet_resnet.train_reidnet_resnet(
             device=device,
             datasets=datasets,
             model=model,
             criterion=torch.nn.CrossEntropyLoss(),
-            lr=opt.lr,
-            batch_size=opt.batch_size,
-            path=opt.model_dir)
+            lr=args.lr,
+            batch_size=args.batch_size,
+            path=args.model_dir)
 
 
 if __name__ == "__main__":

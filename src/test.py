@@ -22,38 +22,7 @@ import torchvision
 
 import reidnet_pcb
 import reidnet_resnet
-from train import dataset_preprocess
-
-transforms = {
-    "train":
-    torchvision.transforms.Compose([
-        torchvision.transforms.Resize(size=(384, 192), interpolation=3),
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                         std=[0.229, 0.224, 0.225])
-    ]),
-    "val":
-    torchvision.transforms.Compose([
-        torchvision.transforms.Resize(size=(384, 192), interpolation=3),
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                         std=[0.229, 0.224, 0.225])
-    ]),
-    "gallery":
-    torchvision.transforms.Compose([
-        torchvision.transforms.Resize(size=(384, 192), interpolation=3),
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                         std=[0.229, 0.224, 0.225])
-    ]),
-    "query":
-    torchvision.transforms.Compose([
-        torchvision.transforms.Resize(size=(384, 192), interpolation=3),
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                         std=[0.229, 0.224, 0.225])
-    ])
-}
+from train import transforms
 
 
 def parser_args():
@@ -67,7 +36,7 @@ def parser_args():
                         type=str,
                         help="The test images dir path")
     parser.add_argument("--model_dir",
-                        default="E:\myGitHub\ReID\model_0",
+                        default="E:\myGitHub\ReID\model_pcb_1",
                         type=str,
                         help="the save model path")
     parser.add_argument("--epoch",
@@ -99,8 +68,7 @@ def load_model(model_dir, epoch, device):
     return model
 
 
-def propocess_test_images(model, dataset_path, batch_size):
-    #这边需要打印一下 model中有什么东西
+def propocess_test_images(dataset_path, batch_size):
     data_transforms = transforms
     image_datasets = {
         x: torchvision.datasets.ImageFolder(os.path.join(dataset_path, x),
@@ -118,9 +86,8 @@ def propocess_test_images(model, dataset_path, batch_size):
 
 
 def predict_and_extract_features(data_loader, model, device):
-    features = torch.FloatTensor()  #这边这个 表示什么意思
-    classes = torch.LongTensor()  #如果没有给出参数，则返回空的零维张量
-    #这边相当于初始化
+    features = torch.FloatTensor()
+    classes = torch.LongTensor()
 
     for data in data_loader:
         image, label = data
@@ -254,7 +221,7 @@ def main():
     device = used_device(args.disable_cuda)
     model = load_model(args.model_dir, args.epoch, device)
     image_datasets, dataloaders = propocess_test_images(
-        model, args.dataset_dir, args.batch_size)
+        args.dataset_dir, args.batch_size)
     dump_test_result(args, image_datasets, dataloaders, model, device)
 
 
