@@ -125,7 +125,7 @@ def train_reidnet_resnet(device,
                                 momentum=0.9,
                                 nesterov=True)
 
-    #Decay LR by a factor of 0.1 every 40 epochs
+    # Decay LR by a factor of 0.1 every 40 epochs
     scheduler = lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.1)
 
     if not os.path.isdir(path):
@@ -153,8 +153,7 @@ def train_reidnet_resnet(device,
 
         x_epoch.append(epoch)
 
-        #each epoch has a training and validation phase
-
+        # each epoch has a training and validation phase
         for phase in ['train', 'val']:
             if phase == "train":
                 scheduler.step()
@@ -165,9 +164,9 @@ def train_reidnet_resnet(device,
             running_loss = 0.0
             running_corrects = 0.0
 
-            #Iterate over data.
+            # Iterate over data.
             for data in dataloaders[phase]:
-                #get the input
+                # get the input
                 inputs, labels = data
                 now_batch_size, c, h, w = inputs.shape
 
@@ -235,7 +234,7 @@ def train_reidnet_resnet(device,
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
 
-    # load best model weights
+    # save best model weights
     save_path = os.path.join(path, 'model_{}.pth'.format('last'))
     torch.save(model, save_path)
 

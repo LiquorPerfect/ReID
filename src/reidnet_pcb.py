@@ -260,22 +260,22 @@ def training_reidnet_pcb(device,
             running_loss = 0.0
             running_corrects = 0.0
 
-            #Iterate over data
+            # Iterate over data
             for data in dataloaders[phase]:
                 # get the inputs
                 inputs, labels = data
                 now_batch_size, c, h, w = inputs.shape
-                #skip the last batch
+                # skip the last batch
                 if now_batch_size < batch_size:
                     continue
 
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
-                #zero the parameter gradients
+                # zero the parameter gradients
                 optimizer.zero_grad()
 
-                #forward
+                # forward
                 if phase == 'val':
                     with torch.no_grad():
                         outputs, features = model(inputs)
@@ -292,7 +292,7 @@ def training_reidnet_pcb(device,
                 for i in range(1, len(outputs)):
                     loss = loss + criterion(outputs[i], labels)
 
-                #backward + optimize only if in training phase
+                # backward + optimize only if in training phase
                 if phase == 'train':
                     loss.backward()
                     optimizer.step()
@@ -308,7 +308,7 @@ def training_reidnet_pcb(device,
 
             y_loss[phase].append(epoch_loss)
             y_err[phase].append(1 - epoch_acc)
-            #deep copy the model
+            # deep copy the model
             if phase == "val":
                 ax0.plot(x_epoch, y_loss['train'], 'bo-', label='train')
                 ax0.plot(x_epoch, y_loss['val'], 'ro-', label='val')
@@ -332,7 +332,7 @@ def training_reidnet_pcb(device,
     print("Time complete in {:.0f}m {:.0f}".format(time_elapsed // 60,
                                                    time_elapsed % 60))
 
-    #load the last model net and weights
+    # save the last model net and weights
     save_path = os.path.join(path, 'model_{}.pth'.format('last'))
     torch.save(model, save_path)
     return model
