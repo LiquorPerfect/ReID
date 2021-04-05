@@ -155,12 +155,6 @@ def train_reidnet_resnet(device,
 
         # each epoch has a training and validation phase
         for phase in ['train', 'val']:
-            if phase == "train":
-                scheduler.step()
-                model.train(True)
-            else:
-                model.train(False)
-
             running_loss = 0.0
             running_corrects = 0.0
 
@@ -198,6 +192,12 @@ def train_reidnet_resnet(device,
                 running_loss += loss.item() * now_batch_size
 
                 running_corrects += float(torch.sum(preds == labels.data))
+
+            if phase == "train":
+                scheduler.step()
+                model.train(True)
+            else:
+                model.train(False)
 
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = running_corrects / dataset_sizes[phase]
